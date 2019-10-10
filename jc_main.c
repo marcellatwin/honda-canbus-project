@@ -6,6 +6,12 @@
  *         0.2 - 29 Aug 2018
  *		   0.3 - 1 Sept 2018
  *         1.0 - 22 May 2019
+ *              Started adding threads during my time at Volvo, program 
+ *              became broken, couldn't find fix, step away from project for
+ *              a while.
+ *         2.0 - 9 Oct 2019
+ *              Starting project back up again, also combining with C++
+ *              school project, so will convert some code to C++
  */
 
 // Standard libraries
