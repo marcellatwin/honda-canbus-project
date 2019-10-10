@@ -85,7 +85,8 @@ struct can_data_conv
 };
 
 // Global variable used for stopping program and both threads
-bool g_quit = false;
+//// FOR NOW
+//bool g_quit = false;
 
 // Function prototypes
 #if DEMO_MODE
@@ -101,7 +102,8 @@ static int setup_CAN_communication(int *s);
 static void jc_LED_enable(int wiringPi_pin, bool flag);
 //static void jc_exhaust_cutout_enable(int wiringPi_pin, bool flag);
 static void text_dash_setup(void);
-static void *print_text_dash_thread(void *data_conv);
+//static void *print_text_dash_thread(void *data_conv);
+static void print_dash(struct can_data_conv *data_conv);
 static void gear_calc(struct can_data_conv *data_conv);
 static void can_convert_17C(struct can_data_conv *data_conv, struct can_frame *frame);
 static void can_convert_1A6(struct can_data_conv *data_conv, struct can_frame *frame);

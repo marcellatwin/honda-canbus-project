@@ -61,8 +61,9 @@ int main(void)
     };
     
     // Set up GPIO pins
-    //// FOR NOW
-    //setup_GPIO();
+    setup_GPIO();
+
+    printf("start\n");
 
     // Set up CAN communication
     int s;
@@ -71,7 +72,7 @@ int main(void)
         printf("Error setting up CAN communication. Try again.\n");
         
         // TEST //
-        printf("TEST - main exiting\n");
+        printf("TESTING - main exiting\n");
         // TEST //
         
         //// WHICH ONE exit OR return
@@ -85,9 +86,18 @@ int main(void)
     clear();
     curs_set(0);
 
+    //printf("Start text setup!\n");
 
     // Setup text based dashboard's static text
-    text_dash_setup();
+    //text_dash_setup();
+
+    int row = 1;
+    mvprintw(1, 1, "Thottle (%%):");
+    mvprintw(2, 1, "Thottle flag:");
+    mvprintw(3, 1, "Thottle Comp:");
+    //row++;
+
+    //printf("End text setup!\n");
 
     // Setup and start the other thread to print the dash
     //// FOR NOW
@@ -111,9 +121,13 @@ int main(void)
     data_conv.increase = true;
     // TEST //
 
+    //// FOR NOW
+    bool quit_var = false;
+
     // Loop until "q" is pressed
-	while (!g_quit) {
-    
+	//while (!g_quit) {
+    while (!quit_var) {
+        printf(".");
     // Determind if in Demo mode
 #if DEMO_MODE
         demo_test(&data_conv);
@@ -122,7 +136,8 @@ int main(void)
 		if(read(s, &frame, sizeof(struct can_frame)) < 0) {
             printf(" Hello!\n");
             perror("Error reading CAN bus address");
-            g_quit = true;
+            quit_var = true;
+            //g_quit = true;
             //pthread_join(print_text_dash_thread_id, NULL);
             break;
         }
@@ -209,7 +224,8 @@ int main(void)
 
         // Determind wheather to keep running or not
 		if (getch() == 'q') {
-			g_quit = true;
+			quit_var = true;
+            //g_quit = true;
             //pthread_join(print_text_dash_thread_id, NULL);
             break;
 		}
@@ -220,7 +236,7 @@ int main(void)
     curs_set(1);
 
     // TEST //
-    printf("TEST - main exiting\n");
+    printf("TESTING2 - main exiting\n");
     // TEST //
 
     return 0;
@@ -258,6 +274,7 @@ void demo_test(struct can_data_conv *data_conv)
 #endif
 
 /*****************************************************************************/
+
 void setup_GPIO(void)
 {
     // Initialize wiringPi program
@@ -270,7 +287,6 @@ void setup_GPIO(void)
     pinMode(LED_YELLOW, OUTPUT);
     //pinMode(EXHAUST_CUTOUT_PIN, OUTPUT);
 }
-
 /*****************************************************************************/
 int setup_CAN_communication(int *s)
 {
@@ -329,7 +345,6 @@ void jc_LED_enable(int wiringPi_pin, bool flag)
 		digitalWrite(wiringPi_pin, LOW);
 	}
 }
-
 /*****************************************************************************/
 /*
 void jc_exhaust_cutout_enable(int wiringPi_pin, bool flag)
@@ -408,8 +423,9 @@ void print_dash(struct can_data_conv *data_conv)
 
     struct can_data_conv *data = (struct can_data_conv *)data_conv;
 
-    while (!g_quit)
-    {
+    //// FOR NOW
+    //while (!g_quit)
+    //{
         row = 1;
 
         mvprintw(row++, DATA_COLM, "%.1f", data->throttle_conv);
@@ -489,13 +505,13 @@ void print_dash(struct can_data_conv *data_conv)
         mvprintw(row++, DATA_COLM, "%s", data->seatbelt_status);
         clrtoeol();
         //row++;   
-    }
+    //}
 
     // TEST //
-    printf("TEST - thread exiting\n");
+    //printf("TEST - thread exiting\n");
     // TEST //
 
-    return NULL;
+    //return NULL;
 }
 
 /*****************************************************************************/
