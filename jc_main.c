@@ -6,11 +6,11 @@
  *         0.2 - 29 Aug 2018
  *		   0.3 - 1 Sept 2018
  *         1.0 - 22 May 2019
- *              Started adding threads during my time at Volvo, program 
+ *              -Started adding threads during my time at Volvo, program 
  *              became broken, couldn't find fix, step away from project for
  *              a while.
  *         2.0 - 9 Oct 2019
- *              Starting project back up again, also combining with C++
+ *              -Starting project back up again, also combining with C++
  *              school project, so will convert some code to C++
  */
 
@@ -61,7 +61,8 @@ int main(void)
     };
     
     // Set up GPIO pins
-	setup_GPIO();
+    //// FOR NOW
+    //setup_GPIO();
 
     // Set up CAN communication
     int s;
@@ -73,7 +74,9 @@ int main(void)
         printf("TEST - main exiting\n");
         // TEST //
         
-        exit(0);
+        //// WHICH ONE exit OR return
+        //exit(0);
+        return 0;
     }
 
     // Initialize curses variables
@@ -87,6 +90,8 @@ int main(void)
     text_dash_setup();
 
     // Setup and start the other thread to print the dash
+    //// FOR NOW
+    /*
     pthread_t print_text_dash_thread_id;
     int thread_check = pthread_create(&print_text_dash_thread_id, NULL, print_text_dash_thread, (void *)&data_conv);
     
@@ -99,6 +104,7 @@ int main(void)
 
         exit(0);
     }
+    */
 
     // TEST //
     data_conv.n = 0;
@@ -117,7 +123,7 @@ int main(void)
             printf(" Hello!\n");
             perror("Error reading CAN bus address");
             g_quit = true;
-            pthread_join(print_text_dash_thread_id, NULL);
+            //pthread_join(print_text_dash_thread_id, NULL);
             break;
         }
 
@@ -198,10 +204,13 @@ int main(void)
         //cruise_control(&data_conv);
 #endif
 
+        //// FOR NOW
+        print_dash(&data_conv);
+
         // Determind wheather to keep running or not
 		if (getch() == 'q') {
 			g_quit = true;
-            pthread_join(print_text_dash_thread_id, NULL);
+            //pthread_join(print_text_dash_thread_id, NULL);
             break;
 		}
 	}
@@ -392,8 +401,8 @@ void text_dash_setup(void)
 }
 
 /*****************************************************************************/
-void *print_text_dash_thread(void *data_conv)
-//void print_dash(struct can_data_conv *data_conv)
+//void *print_text_dash_thread(void *data_conv)
+void print_dash(struct can_data_conv *data_conv)
 {
     int row;
 
