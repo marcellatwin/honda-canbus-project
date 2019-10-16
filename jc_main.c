@@ -41,7 +41,7 @@
 #include "wiringPi.h"
 
 // Library for controlling the terminal curser
-#include <curses.h>
+#include <ncurses.h>
 
 // Library with declarations for functions, defines, & global variables
 #include "jc_main.h"
