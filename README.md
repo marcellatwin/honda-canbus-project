@@ -12,3 +12,5 @@ Now with all of this, the project has taken on a life of its own as I've learned
 Most of the code is based on the linux-can-utils software (from Volkswagen Group I think, haha).  I have decoded a fair amount of the CAN packets, but it is difficult.
 
 The original code was in C but part of this project for school is now to convert it to C++ so a lot of the updates will be getting sections of code converted over to C++.
+
+A lot of the updates to the project will also be on a blog: https://www.raspberrypi.org/forums/viewtopic.php?f=41&t=220138
