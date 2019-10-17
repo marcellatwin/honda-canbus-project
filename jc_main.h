@@ -7,6 +7,11 @@
  *      defines, and global variables.
  */
 
+#include <string>
+#include <iostream>
+
+using namespace std;
+
 // Set up escape sequences for cursor and screen control
 #if 0
 #define CLR_SCREEN		"\33[2J"
@@ -29,12 +34,14 @@
 //#define EXHAUST_CUTOUT_PIN      ??  // GPIO ?? - ?????
 
 // Set Demo & OBD mode variable whether running in demo or OBD mode or not
-#define DEMO_MODE   0   // False
+#define DEMO_MODE   1   // True
 #define OBD_MODE    0   // False
 
-// Set up data structure for the converted CANbus values
-struct can_data_conv
+// Set up class for converted CAN bus values
+/*
+class can_data_conv
 {
+public:
     // TEST //
     int n;
     bool increase;
@@ -52,7 +59,7 @@ struct can_data_conv
     
     int speedo_conv;
     float speed_conv;
-    char *gear_estimation;
+    string gear_estimation;
     float gear_ratio_est;
     bool reverse_status;
     
@@ -79,10 +86,68 @@ struct can_data_conv
     bool right_turn_flag;
     bool left_turn_flag;
     bool wiper_flag;
-    char *headlight_status;
+    string headlight_status;
     
-    char *doors_status;
-    char *seatbelt_status;
+    string doors_status;
+    string seatbelt_status;
+};
+*/
+
+// Set up data structure for the converted CANbus values
+struct can_data_conv
+{
+    // TEST //
+    int n;
+    bool increase;
+    // TEST //
+
+    float throttle_conv;
+    bool throttle_flag;
+    float throttle_comp_conv;
+    
+    int rpm_conv;
+    bool rpm_flag;
+    
+    bool vtec_flag;
+    bool exhaust_flag;
+    
+    int speedo_conv;
+    float speed_conv;
+    //char *gear_estimation;
+    string gear_estimation;
+    float gear_ratio_est;
+    bool reverse_status;
+    
+    bool clutch_status;
+    bool brake_status;
+    
+    /////////////////////////////////////////////////////////////////////
+    bool cruise_cont_active_flag;
+    bool cruise_main_flag;
+    float cruise_target_speed;
+    float cruise_target_diff;
+
+    bool cruise_cancel_flag;
+    ///////////////////////////////////////////////////////////////////
+    
+    int intake_temp_conv;
+    int water_temp_conv;
+    
+    float fuel_level_conv;
+    float fuel_consump_conv;
+
+    bool ac_comp_flag;
+
+    bool right_turn_flag;
+    bool left_turn_flag;
+    bool wiper_flag;
+    //char *headlight_status;
+    string headlight_status;
+    
+    //char *doors_status;
+    string doors_status;
+    //char *seatbelt_status;
+    string seatbelt_status;
 };
 
 //// TILL THREADS ARE ADDED

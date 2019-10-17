@@ -61,6 +61,7 @@ int main(void)
 	// Initilize flags and other variables
     //// DOES THIS NEED TO HAPPEN, ALL THE FALSES???
     //// THIS DOESN'T WORK IN C++ ////
+    //// MAYBE SEPERATE FUNCTION TO SET OR ON FIRST LOOP???
     /*
     struct can_data_conv data_conv = {
         throttle_flag : false,
@@ -74,8 +75,6 @@ int main(void)
     
     // Set up GPIO pins
     setup_GPIO();
-
-    //printf("start\n");
 
 #if 1
     // Set up CAN communication
@@ -140,22 +139,12 @@ int main(void)
 
     // Initialize curses variables
     initscr();
-    //nodelay(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
     //clear();
     curs_set(0);
 
     // Setup text based dashboard's static text
     text_dash_setup();
-    
-    /*
-    int row = 1;
-
-    mvprintw(row++, 1, "Thottle (%%):");
-    mvprintw(row++, 1, "Thottle flag:");
-    mvprintw(row++, 1, "Thottle Comp:");
-    */
-
-    //printf("TESTING - main exiting\n");
 
     //// TILL THREADS ARE ADDED
     // Setup and start the other thread to print the dash
@@ -174,10 +163,10 @@ int main(void)
     }
     */
 
-    // TEST //
+#if DEMO_MODE
     data_conv.n = 0;
     data_conv.increase = true;
-    // TEST //
+#endif
 
     //// FOR NOW
     bool quit_var = false;
@@ -186,12 +175,11 @@ int main(void)
 	//while (!g_quit) {
     while (!quit_var) {
 
-//// DEMO MODE NEEDS REARRANGING
 #if DEMO_MODE
         demo_test(&data_conv);
 
 #else
-    getch();
+        //getch();    
         if(read(s, &frame, sizeof(struct can_frame)) < 0) {
             perror("Error reading CAN bus address");
             quit_var = true;
@@ -220,6 +208,61 @@ int main(void)
         else {
             data_conv.vtec_flag = false;
         }
+#endif
+
+        if (data_conv.throttle_flag && data_conv.rpm_flag && data_conv.vtec_flag) {
+            data_conv.exhaust_flag = true;
+        }
+        else {
+            data_conv.exhaust_flag = false;
+        }
+
+        jc_LED_enable(PICAN_LED_RED, data_conv.exhaust_flag);
+        //jc_exhaust_cutout_enable(EXHAUST_CUTOUT_PIN, data_conv.exhaust_flag);
+
+#if !DEMO_MODE
+        if (frame.can_id == 0x158) {
+            data_conv.speed_conv = ((frame.data[0] << 8) + (frame.data[1])) / 160;
+        }
+
+        if (frame.can_id == 0x1A6) {
+            can_convert_1A6(&data_conv, &frame);
+            //cruise_control_buttons(&data_conv, &frame);
+        }
+
+        if (frame.can_id == 0x13c) {
+            can_convert_13C(&data_conv, &frame);
+        }
+
+        if (frame.can_id == 0x294) {
+            can_convert_294(&data_conv, &frame);
+        }
+
+        if (frame.can_id == 0x309) {
+            data_conv.speedo_conv = (frame.data[3]);
+        }
+
+        // Fix, find scaling, educated guess right now
+        if (frame.can_id == 0x324) {
+            data_conv.water_temp_conv = frame.data[0] - 40;     // Think it's in C
+            data_conv.intake_temp_conv = frame.data[1] - 40;        // Think it's in C
+        }
+
+        // Fix, find scaling, educated guess right now
+        if (frame.can_id == 0x377) {
+            data_conv.fuel_consump_conv = frame.data[0] / 1.7;  // Think it's in MPG
+        }
+
+        // Fix, find scaling, educated guess right now
+        if (frame.can_id == 0x378) {
+            data_conv.fuel_level_conv = ((frame.data[4] << 8) + (frame.data[5])) / 1000;    // Think it's in gals
+        }
+        
+        if (frame.can_id == 0x405) {
+            can_convert_405(&data_conv, &frame);
+        }
+        
+        //cruise_control(&data_conv);
 #endif
 
         // Print values to dash
@@ -263,7 +306,6 @@ void demo_test(struct can_data_conv *data_conv)
     else if (data_conv->n < 0) {
         data_conv->increase = true;
     }
-    //// IS THIS NEEDED
     if (data_conv->n > 5000) {
         data_conv->vtec_flag = true;
         data_conv->rpm_flag = true;
@@ -417,7 +459,7 @@ void text_dash_setup(void)
     mvprintw(row++, 1, "Doors or Trunk:");
     mvprintw(row++, 1, "Seatbelts (Any):");
     //row++;
-    refresh();
+    //refresh();
 }
 
 /*****************************************************************************/
@@ -626,21 +668,21 @@ void can_convert_1A6(struct can_data_conv *data_conv, struct can_frame *frame)
 /*****************************************************************************/
 void can_convert_13C(struct can_data_conv *data_conv, struct can_frame *frame)
 {
-	if (data_conv->reverse_status == true) {
+	if (data_conv->reverse_status == true)
 		data_conv->gear_estimation = "Reverse";
-	}
-	else {
-		if (frame->data[6] == 0x04) {
+	else 
+    {
+		if (frame->data[6] == 0x04)
+        {
 			data_conv->clutch_status = false;
-			if (data_conv->speed_conv > 0) {
-				//data_conv.gear_estimation = gear_calc(speed_conv, rpm_conv);
+		
+        	if (data_conv->speed_conv > 0)
                 gear_calc(data_conv);
-			}
-			else {
+			else
 				data_conv->gear_estimation = "Neutral";
-			}
 		}
-		else {
+		else
+        {
 			data_conv->clutch_status = true;
 			data_conv->gear_estimation = "Clutch";
 		}
@@ -653,50 +695,38 @@ void can_convert_13C(struct can_data_conv *data_conv, struct can_frame *frame)
 /*****************************************************************************/
 void can_convert_294(struct can_data_conv *data_conv, struct can_frame *frame)
 {
-	if ((frame->data[0] >> 4) == 0x04) {
+	if ((frame->data[0] >> 4) == 0x04)
 		data_conv->right_turn_flag = true;
-	}
-	else {
+	else
 		data_conv->right_turn_flag = false;
-	}
 
-	if ((frame->data[0] >> 4) == 0x02) {
+	if ((frame->data[0] >> 4) == 0x02)
 		data_conv->left_turn_flag = true;
-	}
-	else {
+	else
 		data_conv->left_turn_flag = false;
-	}
 
-	if ((frame->data[0] & 0x0F) == 0x0C) {
+	if ((frame->data[0] & 0x0F) == 0x0C)
 		data_conv->wiper_flag = true;
-	}
-	else {
+	else
 		data_conv->wiper_flag = false;
-	}
 }
 
 /*****************************************************************************/
 void can_convert_405(struct can_data_conv *data_conv, struct can_frame *frame)
 {
-    if ((frame->data[1] & 0x0F) == 0x01) {
+    if ((frame->data[1] & 0x0F) == 0x01)
         data_conv->doors_status = "Closed";
-    }
-    else if ((frame->data[1] & 0x0F) == 0x02) {
+    else if ((frame->data[1] & 0x0F) == 0x02)
         data_conv->doors_status = "Open";
-    }
-    else {
+    else
         data_conv->doors_status = "Don't Know";
-    }
     
-    if ((frame->data[2]) == 0x20) {
+    if ((frame->data[2]) == 0x20)
         data_conv->doors_status = "Buckled";
-    }
-    else if ((frame->data[2]) == 0x24) {
+    else if ((frame->data[2]) == 0x24)
         data_conv->doors_status = "Unbuckled";
-    }
-    else {
+    else
         data_conv->doors_status = "Don't Know";
-    }
 }
 
 
