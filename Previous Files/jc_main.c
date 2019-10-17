@@ -127,14 +127,14 @@ int main(void)
     // Loop until "q" is pressed
 	//while (!g_quit) {
     while (!quit_var) {
-        printf(".");
+        //printf(".");
     // Determind if in Demo mode
 #if DEMO_MODE
         demo_test(&data_conv);
 
 #else
 		if(read(s, &frame, sizeof(struct can_frame)) < 0) {
-            printf(" Hello!\n");
+            //printf(" Hello!\n");
             perror("Error reading CAN bus address");
             quit_var = true;
             //g_quit = true;

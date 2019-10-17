@@ -34,7 +34,7 @@
 #include "wiringPi.h"
 
 // Library for controlling the terminal curser
-#include <curses.h>
+#include <ncurses.h>
 
 // Global variable used for stopping program and both threads
 bool g_quit = false;
@@ -51,7 +51,7 @@ void *can_send_thread(void *setup_CAN_return);
 int setup_CAN_communication(struct return_struct *setup_CAN_return);
 
 
-int parse_canframe(char *cs, struct can_frame *cf);
+//int parse_canframe(char *cs, struct can_frame *cf);
 /*
  * Transfers a valid ASCII string decribing a CAN frame into struct can_frame.
  *
@@ -244,6 +244,7 @@ int setup_CAN_communication(struct return_struct *setup_CAN_return)
     return 0;
 }
 
+/*
 int parse_canframe(char *cs, struct can_frame *cf) {
 	/* documentation see lib.h */
 
@@ -323,3 +324,4 @@ unsigned char asc2nibble(char c) {
 
 	return 16; /* error */
 }
+*/

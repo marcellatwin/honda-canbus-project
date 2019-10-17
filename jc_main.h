@@ -25,6 +25,7 @@
 #define LED_RED         4   // GPIO 23 - Red LED on Breadboard
 #define LED_GREEN       29  // GPIO 21 - Green LED on Breadboard
 #define LED_YELLOW      25  // GPIO 26 - Yellow LED on Breadboard
+//// FOR WHEN PNUMATICS ARE ADDED
 //#define EXHAUST_CUTOUT_PIN      ??  // GPIO ?? - ?????
 
 // Set Demo & OBD mode variable whether running in demo or OBD mode or not
@@ -84,8 +85,8 @@ struct can_data_conv
     char *seatbelt_status;
 };
 
+//// TILL THREADS ARE ADDED
 // Global variable used for stopping program and both threads
-//// FOR NOW
 //bool g_quit = false;
 
 // Function prototypes
@@ -100,8 +101,10 @@ struct can_data_conv
 static void setup_GPIO(void);
 static int setup_CAN_communication(int *s);
 static void jc_LED_enable(int wiringPi_pin, bool flag);
+//// FOR WHEN PNUMATICS ARE ADDED
 //static void jc_exhaust_cutout_enable(int wiringPi_pin, bool flag);
-static void text_dash_setup(void);
+void text_dash_setup(void);
+//// TILL THREADS ARE ADDED
 //static void *print_text_dash_thread(void *data_conv);
 static void print_dash(struct can_data_conv *data_conv);
 static void gear_calc(struct can_data_conv *data_conv);

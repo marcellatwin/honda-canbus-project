@@ -12,8 +12,11 @@
  *         2.0 - 9 Oct 2019
  *              -Starting project back up again, also combining with C++
  *              school project, so will convert some code to C++
+ *         2.1 - 16 Oct 2019
+ *              -Fixed issue with curses (ncurses)
  */
 
+//// ARE ANY OF THESE NEEDED FOR C++
 // Standard libraries
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,13 +24,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <pthread.h>
+//#include <pthread.h>
 
+#include <string>
+#include <iostream>
+
+//// ARE ANY OF THESE NEEDED FOR C++
 // Libraries for connecting to CAN socket
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
+//// ARE ANY OF THESE NEEDED FOR C++
 #include <net/if.h>
 
 // Libraries for linux-can-utils
@@ -69,46 +77,88 @@ int main(void)
 
     //printf("start\n");
 
-#if 0
+#if 1
     // Set up CAN communication
     int s;
     struct can_frame frame;
     if (setup_CAN_communication(&s) == -1) {
         printf("Error setting up CAN communication. Try again.\n");
         
-        // TEST //
-        printf("TESTING - main exiting\n");
-        // TEST //
-        
-        //// WHICH ONE exit OR return
+        //// WHICH ONE exit OR return???
         //exit(0);
         return 0;
     }
 #endif
 
+#if 0
+    // Set up variables to connect to CAN bus
+    struct sockaddr_can addr;
+    struct ifreq ifr;
+
+    struct can_frame frame;
+
+    /*
+    //// For when PiCanDuo comes into play ////
+    idx = idx2dindex(addr.can_ifindex, s[i]);
+    devname[idx]
+    strcpy(devname[i], ifr.ifr_name);
+    static char devname[MAXIFNAMES][IFNAMSIZ+1];
+    */
+
+    // Get socket address
+    int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if (s == -1) {
+        perror("Error creating endpoint for socket communication");
+        //return -1;
+        return 0;
+    }
+
+    // Copy some addresses and names into the CAN structs
+    strcpy(ifr.ifr_name, "can0");
+    addr.can_family = AF_CAN;
+    
+    // Do something with control device
+    if (ioctl(s, SIOCGIFINDEX, &ifr) == -1) {
+        perror("Error with control device (SIOCGIFINDEX)");
+        //return -1;
+        return 0;
+    }
+    
+    // Do some more with structs and something with the CPU socket
+    addr.can_ifindex = ifr.ifr_ifindex;
+    setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
+
+    // Combine it all together into "s" for the final socket address
+    if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        //printf("%d\n",errno);
+        perror("Error with binding socket address");
+        //return -1;
+        return 0;
+    }
+#endif
+
+
     // Initialize curses variables
     initscr();
-    nodelay(stdscr, TRUE);
-    clear();
+    //nodelay(stdscr, TRUE);
+    //clear();
     curs_set(0);
-
-    //printf("Start text setup!\n");
 
     // Setup text based dashboard's static text
     text_dash_setup();
-
+    
     /*
     int row = 1;
-    mvprintw(1, 1, "Thottle (%%):");
-    mvprintw(2, 1, "Thottle flag:");
-    mvprintw(3, 1, "Thottle Comp:");
-    //row++;
+
+    mvprintw(row++, 1, "Thottle (%%):");
+    mvprintw(row++, 1, "Thottle flag:");
+    mvprintw(row++, 1, "Thottle Comp:");
     */
 
-    //printf("End text setup!\n");
+    //printf("TESTING - main exiting\n");
 
+    //// TILL THREADS ARE ADDED
     // Setup and start the other thread to print the dash
-    //// FOR NOW
     /*
     pthread_t print_text_dash_thread_id;
     int thread_check = pthread_create(&print_text_dash_thread_id, NULL, print_text_dash_thread, (void *)&data_conv);
@@ -135,11 +185,45 @@ int main(void)
     // Loop until "q" is pressed
 	//while (!g_quit) {
     while (!quit_var) {
-        //printf(".");
 
-        //// FOR NOW
-        print_dash(&data_conv);
+//// DEMO MODE NEEDS REARRANGING
+#if DEMO_MODE
         demo_test(&data_conv);
+
+#else
+    getch();
+        if(read(s, &frame, sizeof(struct can_frame)) < 0) {
+            perror("Error reading CAN bus address");
+            quit_var = true;
+            //g_quit = true;
+            //pthread_join(print_text_dash_thread_id, NULL);
+            break;
+        }
+
+        if (frame.can_id == 0x17c) {
+            can_convert_17C(&data_conv, &frame);
+        }
+
+        if (frame.can_id == 0x1dc) {
+            data_conv.rpm_conv = ((frame.data[1] << 8) + (frame.data[2]));
+            if (data_conv.rpm_conv > 5000) {
+                data_conv.rpm_flag = true;
+            }
+            else if (data_conv.rpm_conv < 4800) {
+                data_conv.rpm_flag = false;
+            }
+        }
+
+        if (frame.can_id == 0x320) {
+            data_conv.vtec_flag = true;
+        }
+        else {
+            data_conv.vtec_flag = false;
+        }
+#endif
+
+        // Print values to dash
+        print_dash(&data_conv);
 
         // Determind wheather to keep running or not
 		if (getch() == 'q') {
@@ -154,9 +238,9 @@ int main(void)
 	endwin();
     curs_set(1);
 
-    // TEST //
-    printf("TESTING2 - main exiting\n");
-    // TEST //
+    // FOR TESTING //
+    //printf("TESTING - main exiting\n");
+    // FOR TESTING //
 
     return 0;
 }
@@ -165,7 +249,6 @@ int main(void)
 /*****************************************************************************/
 void demo_test(struct can_data_conv *data_conv)
 {
-    // TEST //
     if (data_conv->increase) {
         data_conv->rpm_conv = data_conv->n++;
         data_conv->throttle_flag = true;
@@ -180,6 +263,7 @@ void demo_test(struct can_data_conv *data_conv)
     else if (data_conv->n < 0) {
         data_conv->increase = true;
     }
+    //// IS THIS NEEDED
     if (data_conv->n > 5000) {
         data_conv->vtec_flag = true;
         data_conv->rpm_flag = true;
@@ -188,12 +272,10 @@ void demo_test(struct can_data_conv *data_conv)
         data_conv->vtec_flag = false;
         data_conv->rpm_flag = false;    
     }
-    // TEST //
 }
 #endif
 
 /*****************************************************************************/
-
 void setup_GPIO(void)
 {
     // Initialize wiringPi program
@@ -204,6 +286,8 @@ void setup_GPIO(void)
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GREEN, OUTPUT);
     pinMode(LED_YELLOW, OUTPUT);
+
+    //// FOR WHEN PNUMATICS ARE ADDED
     //pinMode(EXHAUST_CUTOUT_PIN, OUTPUT);
 }
 /*****************************************************************************/
@@ -266,6 +350,7 @@ void jc_LED_enable(int wiringPi_pin, bool flag)
 }
 /*****************************************************************************/
 /*
+//// FOR WHEN PNUMATICS ARE ADDED
 void jc_exhaust_cutout_enable(int wiringPi_pin, bool flag)
 {
 	// Open/Close Exhaust Cutout valve
@@ -332,6 +417,7 @@ void text_dash_setup(void)
     mvprintw(row++, 1, "Doors or Trunk:");
     mvprintw(row++, 1, "Seatbelts (Any):");
     //row++;
+    refresh();
 }
 
 /*****************************************************************************/
@@ -342,7 +428,7 @@ void print_dash(struct can_data_conv *data_conv)
 
     struct can_data_conv *data = (struct can_data_conv *)data_conv;
 
-    //// FOR NOW
+    //// TILL THREADS ARE ADDED
     //while (!g_quit)
     //{
         row = 1;
@@ -423,14 +509,12 @@ void print_dash(struct can_data_conv *data_conv)
         clrtoeol();
         mvprintw(row++, DATA_COLM, "%s", data->seatbelt_status);
         clrtoeol();
-        //row++;   
+        //row++;
     //}
 
     // TEST //
     //printf("TEST - thread exiting\n");
     // TEST //
-
-    //return NULL;
 }
 
 /*****************************************************************************/
@@ -562,7 +646,8 @@ void can_convert_13C(struct can_data_conv *data_conv, struct can_frame *frame)
 		}
 	}
 
-	data_conv->throttle_comp_conv = frame->data[1];	//// FIX, figure out scaling
+    //// FIX, figure out scaling
+	data_conv->throttle_comp_conv = frame->data[1];
 }
 
 /*****************************************************************************/
@@ -655,9 +740,6 @@ void cruise_control_buttons(struct can_data_conv *data_conv, struct can_frame *f
     }
 
 
-
-
-#if 0
     if (data_conv->cruise_cont_active_flag == true) {
         if ((frame->data[0] >> 4) == 0x02) {
             data_conv->cruise_main_flag = false;
@@ -696,7 +778,6 @@ void cruise_control_buttons(struct can_data_conv *data_conv, struct can_frame *f
 	else if ((frame->data[0] >> 4) == 0x04) {
 		cruise_cancel_flag = true;
 	}
-#endif
 }
 
 /*****************************************************************************/
@@ -705,13 +786,11 @@ void cruise_control(struct can_data_conv *data_conv)
 {
     float data_conv->cruise_target_diff = data_conv->cruise_target_speed - data_conv->speed_conv;
 
-#if 0
 	float new_throttle;
 	if (diff_speed < 0) {
 		new_throttle = 0
 	}
     
 	return new_throttle;
-#endif
 }
 #endif
