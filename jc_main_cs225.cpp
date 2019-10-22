@@ -11,53 +11,21 @@
  *              a while.
  *         2.0 - 9 Oct 2019
  *              -Starting project back up again, also combining with C++
- *              school project, so will convert some code to C++
+ *              school project, so will convert code to C++
  *         2.1 - 16 Oct 2019
  *              -Fixed issue with curses (ncurses)
  */
 
-//// ARE ANY OF THESE NEEDED FOR C++
-// Standard libraries
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-//#include <pthread.h>
 
-#include <string>
-#include <iostream>
-
-//// ARE ANY OF THESE NEEDED FOR C++
-// Libraries for connecting to CAN socket
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-
-//// ARE ANY OF THESE NEEDED FOR C++
-#include <net/if.h>
-
-// Libraries for linux-can-utils
-#include <linux/can.h>
-#include <linux/can/raw.h>
-
-// Library for sending CAN messages
-//#include "lib.h"
-
-// Library for GPIO control
-#include "wiringPi.h"
-
-// Library for controlling the terminal curser
-#include <ncurses.h>
-
-// Library with declarations for functions, defines, & global variables
+// Header file with declarations for functions, defines, global variables,
+// libraries, & other files
 #include "jc_main.h"
 
 /*****************************************************************************/
 int main(void)
 {
-	
+	cout << "Start TEST\n";
+
 	// Initilize flags and other variables
     //// DOES THIS NEED TO HAPPEN, ALL THE FALSES???
     //// THIS DOESN'T WORK IN C++ ////
@@ -85,9 +53,13 @@ int main(void)
         
         //// WHICH ONE exit OR return???
         //exit(0);
+        cout << "Return TEST\n";
+        getch();
         return 0;
     }
 #endif
+
+    cout << "Start2TEST\n";
 
 #if 0
     // Set up variables to connect to CAN bus
@@ -139,7 +111,7 @@ int main(void)
 
     // Initialize curses variables
     initscr();
-    nodelay(stdscr, TRUE);
+    //nodelay(stdscr, TRUE);
     //clear();
     curs_set(0);
 
@@ -171,6 +143,9 @@ int main(void)
     //// FOR NOW
     bool quit_var = false;
 
+    cout << "Start 3TEST\n";
+    getch();
+
     // Loop until "q" is pressed
 	//while (!g_quit) {
     while (!quit_var) {
@@ -179,14 +154,19 @@ int main(void)
         demo_test(&data_conv);
 
 #else
-        //getch();    
-        if(read(s, &frame, sizeof(struct can_frame)) < 0) {
+        
+        //if(read(s, &frame, sizeof(struct can_frame)) < 0) {
+        if(read(s, &frame, sizeof(frame)) < 0) {
+            cout << "Start IF TEST\n";
+            getch();
             perror("Error reading CAN bus address");
             quit_var = true;
             //g_quit = true;
             //pthread_join(print_text_dash_thread_id, NULL);
             break;
         }
+        cout << "End TEST\n";
+        getch();
 
         if (frame.can_id == 0x17c) {
             can_convert_17C(&data_conv, &frame);
@@ -317,21 +297,6 @@ void demo_test(struct can_data_conv *data_conv)
 }
 #endif
 
-/*****************************************************************************/
-void setup_GPIO(void)
-{
-    // Initialize wiringPi program
-    wiringPiSetup();
-    
-    // Initilize pins and set modes
-    pinMode(PICAN_LED_RED, OUTPUT);
-    pinMode(LED_RED, OUTPUT);
-    pinMode(LED_GREEN, OUTPUT);
-    pinMode(LED_YELLOW, OUTPUT);
-
-    //// FOR WHEN PNUMATICS ARE ADDED
-    //pinMode(EXHAUST_CUTOUT_PIN, OUTPUT);
-}
 /*****************************************************************************/
 int setup_CAN_communication(int *s)
 {

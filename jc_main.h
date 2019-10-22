@@ -2,13 +2,56 @@
 /*
  * By Jonathan Crossley
  * Version 0.1 - 29 Jun 2019
+ *          1.0 - 20 Oct 2019
+                - Converted to C++
  *
  * jc_main.h - Header file for jc_main, includes declarations for functions,
  *      defines, and global variables.
  */
 
+
+// Includes for main
 #include <string>
 #include <iostream>
+
+//// ARE ANY OF THESE NEEDED FOR C++
+// Standard libraries
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+//#include <pthread.h>
+
+//#include <string>
+//#include <iostream>
+
+//// ARE ANY OF THESE NEEDED FOR C++
+// Libraries for connecting to CAN socket
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+
+//// ARE ANY OF THESE NEEDED FOR C++
+#include <net/if.h>
+
+// Libraries for linux-can-utils
+#include <linux/can.h>
+#include <linux/can/raw.h>
+
+// Library for sending CAN messages
+//#include "lib.h"
+
+// Library for GPIO control
+#include "wiringPi.h"
+
+// Library for controlling the terminal curser
+#include <ncurses.h>
+
+// Header files to be included
+#include "jc_GPIO.h"
+
 
 using namespace std;
 
@@ -25,73 +68,34 @@ using namespace std;
 // Define the column where the updating text starts
 #define DATA_COLM   23
 
-// Set up the WiringPi pin numbers for the GPIO pins
-#define PICAN_LED_RED   3   // GPIO 22 - PiCan2 Red LED
-#define LED_RED         4   // GPIO 23 - Red LED on Breadboard
-#define LED_GREEN       29  // GPIO 21 - Green LED on Breadboard
-#define LED_YELLOW      25  // GPIO 26 - Yellow LED on Breadboard
-//// FOR WHEN PNUMATICS ARE ADDED
-//#define EXHAUST_CUTOUT_PIN      ??  // GPIO ?? - ?????
-
 // Set Demo & OBD mode variable whether running in demo or OBD mode or not
-#define DEMO_MODE   1   // True
+#define DEMO_MODE   0   // True
 #define OBD_MODE    0   // False
 
-// Set up class for converted CAN bus values
-/*
-class can_data_conv
+
+
+
+
+int main()
 {
-public:
-    // TEST //
-    int n;
-    bool increase;
-    // TEST //
+    s = socketHandler;
+    d = displayHandler;
+    Message messageHandlers[1];
+    messageHandlers[0] = new EngineMessages();
+    while(True){
+        string message = s.getMessage();
+        string type = s.getType();
+        for(int i = 0; i < count(messageHandlers); i++){
+            if(messageHandlers[i].handlesType(type)){
+                messageHandlers[i].Process(message);
+                break;
+            }
+        }
+        
+        d.update(messageHandlers);
+    }
 
-    float throttle_conv;
-    bool throttle_flag;
-    float throttle_comp_conv;
-    
-    int rpm_conv;
-    bool rpm_flag;
-    
-    bool vtec_flag;
-    bool exhaust_flag;
-    
-    int speedo_conv;
-    float speed_conv;
-    string gear_estimation;
-    float gear_ratio_est;
-    bool reverse_status;
-    
-    bool clutch_status;
-    bool brake_status;
-    
-    /////////////////////////////////////////////////////////////////////
-    bool cruise_cont_active_flag;
-    bool cruise_main_flag;
-    float cruise_target_speed;
-    float cruise_target_diff;
 
-    bool cruise_cancel_flag;
-    ///////////////////////////////////////////////////////////////////
-    
-    int intake_temp_conv;
-    int water_temp_conv;
-    
-    float fuel_level_conv;
-    float fuel_consump_conv;
-
-    bool ac_comp_flag;
-
-    bool right_turn_flag;
-    bool left_turn_flag;
-    bool wiper_flag;
-    string headlight_status;
-    
-    string doors_status;
-    string seatbelt_status;
-};
-*/
 
 // Set up data structure for the converted CANbus values
 struct can_data_conv
@@ -163,7 +167,7 @@ struct can_data_conv
     static void OBD_send();
 #endif
 
-static void setup_GPIO(void);
+
 static int setup_CAN_communication(int *s);
 static void jc_LED_enable(int wiringPi_pin, bool flag);
 //// FOR WHEN PNUMATICS ARE ADDED
