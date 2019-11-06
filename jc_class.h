@@ -96,7 +96,7 @@ class Throttle : public Converted_CAN_Data
 //private:
 //    int message_id[] = 17c, 1dc;  // may have more than one id
 public:
-    void Convert_message();  // convert the raw data from one or two can ids
+    void Convert_message(&frame);  // convert the raw data from one or two can ids
     int display(int row);  // print to console starting with the row 
     void Throttle();  // Constructor to give starting values-falses, true, 0, etc.
 };
